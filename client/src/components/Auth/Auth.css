@@ -1,0 +1,104 @@
+.authContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #1a1a1d;
+}
+
+.authBox {
+  background: #2d2d30;
+  padding: 40px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.authBox h1 {
+  color: white;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.authBox form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.authBox input {
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #444;
+  border-radius: 5px;
+  background: white;
+}
+
+.authBox button {
+  background: #2979ff;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.authBox button:hover:not(:disabled) {
+  background: #1e5fc2;
+}
+
+.authBox button:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.authToggle {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.authToggle p {
+  color: #aaa;
+}
+
+.authToggle span {
+  color: #2979ff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.authToggle span:hover {
+  color: #1e5fc2;
+}
+
+.skipAuth {
+  margin-top: 15px;
+  text-align: center;
+  border-top: 1px solid #444;
+  padding-top: 15px;
+}
+
+.skipAuth p {
+  color: #aaa;
+}
+
+.skipAuth span {
+  color: #2979ff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.skipAuth span:hover {
+  color: #1e5fc2;
+}
+
+@media (max-width: 480px) {
+  .authBox {
+    margin: 20px;
+    padding: 30px 20px;
+  }
+}

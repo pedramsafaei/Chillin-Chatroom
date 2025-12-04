@@ -175,3 +175,28 @@
 .btn:active:after {
   border-left-color: hsla(0, 5%, 0%, 1);
 }
+
+.additionalLinks {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.linkBtn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  background: #2979ff;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  transition: background 0.3s;
+}
+
+.linkBtn:hover {
+  background: #1e5fc2;
+}

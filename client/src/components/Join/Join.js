@@ -39,6 +39,14 @@ const Join = () => {
             <button className="btn" type="submit"></button>
           </Link>
         </form>
+        <div className="additionalLinks">
+          <Link to="/rooms" className="linkBtn">
+            Browse Rooms
+          </Link>
+          <Link to="/auth" className="linkBtn">
+            Login / Register
+          </Link>
+        </div>
       </div>
     </div>
   );
