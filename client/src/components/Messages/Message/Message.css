@@ -1,145 +1,174 @@
-/* Message Component - Spaces Design */
+/* Message Container */
 .message-container {
   display: flex;
-  margin-bottom: var(--space-3);
-  animation: fadeIn var(--transition-base);
+  padding: var(--space-3) var(--space-5);
+  gap: var(--space-3);
+  animation: messageSlideIn 0.2s ease-out;
 }
 
-/* System Messages */
-.message-container-system {
-  display: flex;
-  justify-content: center;
-  margin: var(--space-4) 0;
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.message-system {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  background: var(--bg-700);
-  border: 1px solid var(--bg-600);
-  border-radius: var(--radius-full);
-  color: var(--text-300);
-  font-size: var(--text-body-sm);
-  max-width: 80%;
+.message-container:hover {
+  background: rgba(255, 255, 255, 0.02);
 }
 
-.message-system-text {
-  margin: 0;
-  line-height: 1.4;
-}
-
-.message-system svg {
-  flex-shrink: 0;
-}
-
-/* Sent Messages */
-.message-sent {
-  justify-content: flex-end;
-}
-
-.message-sent .message-content {
-  align-items: flex-end;
-  max-width: 70%;
-}
-
-.message-sent .message-bubble {
-  background: linear-gradient(135deg, var(--blue-from) 0%, var(--blue-to) 100%);
-  color: var(--text-100);
-  border-bottom-right-radius: var(--radius-sm);
-}
-
-/* Failed message styling */
-.message-failed .message-bubble {
-  opacity: 0.7;
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-}
-
-/* Received Messages */
 .message-received {
   justify-content: flex-start;
-  gap: var(--space-2);
 }
 
-.message-received .message-content {
-  align-items: flex-start;
-  max-width: 70%;
-}
-
-.message-received .message-bubble {
-  background: var(--bg-700);
-  color: var(--text-100);
-  border-bottom-left-radius: var(--radius-sm);
+.message-sent {
+  justify-content: flex-end;
 }
 
 /* Avatar */
 .message-avatar {
   flex-shrink: 0;
-  margin-top: var(--space-1);
 }
 
 .avatar-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-body-sm);
-  font-weight: 600;
-  color: white;
-  text-transform: uppercase;
+  font-size: var(--text-body);
+  font-weight: 700;
+  color: var(--text-100);
 }
 
 /* Message Content */
 .message-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
+  max-width: 70%;
   min-width: 0;
 }
 
+.message-sent .message-content {
+  align-items: flex-end;
+}
+
+.message-received .message-content {
+  align-items: flex-start;
+}
+
+/* Message Header */
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-body-sm);
+}
+
+.message-sender {
+  font-weight: 600;
+  color: var(--text-200);
+}
+
+.message-time {
+  font-size: var(--text-caption);
+  color: var(--text-400);
+}
+
+/* Reply Indicator */
+.reply-indicator {
+  font-size: var(--text-caption);
+  color: var(--text-400);
+  padding-left: var(--space-2);
+  border-left: 2px solid var(--bg-600);
+  margin-bottom: var(--space-1);
+}
+
+.reply-user {
+  color: var(--blue-from);
+  font-weight: 600;
+}
+
+/* Message Bubble */
 .message-bubble {
   padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
   word-wrap: break-word;
-  overflow-wrap: break-word;
+  box-shadow: var(--shadow-sm);
+}
+
+.message-bubble-received {
+  background: var(--bg-800);
+  color: var(--text-100);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.message-bubble-sent {
+  background: linear-gradient(135deg, var(--blue-from) 0%, var(--blue-to) 100%);
+  color: var(--text-100);
+  border-bottom-right-radius: var(--radius-sm);
 }
 
 .message-text {
-  margin: 0;
   font-size: var(--text-body);
   line-height: 1.5;
-  white-space: pre-wrap;
+  margin: 0;
 }
 
-.message-text img {
-  vertical-align: middle;
-  max-width: 100%;
-  height: auto;
+/* Message Reactions */
+.message-reactions {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.reaction-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--bg-700);
+  border: 1px solid var(--bg-600);
+  border-radius: var(--radius-full);
+  font-size: var(--text-caption);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.reaction-badge:hover {
+  background: var(--bg-600);
+  border-color: var(--bg-500);
+  transform: scale(1.05);
+}
+
+.reaction-emoji {
+  font-size: 14px;
+}
+
+.reaction-count {
+  color: var(--text-300);
+  font-weight: 600;
 }
 
 /* Message Meta */
 .message-meta {
-  padding: 0 var(--space-2);
   display: flex;
   align-items: center;
   gap: var(--space-2);
-}
-
-.message-sender {
   font-size: var(--text-caption);
-  color: var(--text-400);
-  font-weight: 600;
 }
 
-/* Message State Indicators */
+/* Message State */
 .message-state {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  color: var(--text-400);
 }
 
 .message-state.sending {
@@ -148,80 +177,79 @@
 }
 
 .message-state.sent {
-  color: var(--text-400);
+  color: var(--success);
 }
 
 .message-state.failed {
-  color: #e74c3c;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 1;
-  }
+  color: var(--error);
 }
 
 /* Retry Button */
 .message-retry-btn {
-  background: transparent;
-  border: 1px solid var(--text-400);
-  color: var(--text-400);
   padding: 2px 8px;
+  background: var(--error);
+  color: var(--text-100);
+  border: none;
   border-radius: var(--radius-sm);
   font-size: var(--text-caption);
+  font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .message-retry-btn:hover {
-  background: var(--text-400);
-  color: var(--bg-800);
+  background: var(--rose-to);
+  transform: scale(1.05);
 }
 
-/* Hover Effects */
-.message-bubble:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-fast);
+/* Failed Message */
+.message-failed .message-bubble {
+  opacity: 0.7;
+  background: var(--bg-700);
 }
 
-/* Link Styling in Messages */
-.message-text a {
-  color: var(--cyan-from);
-  text-decoration: underline;
-  transition: color var(--transition-fast);
+/* System Messages */
+.message-container-system {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4) var(--space-5);
 }
 
-.message-text a:hover {
-  color: var(--cyan-to);
+.message-system {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-800);
+  border: 1px solid var(--bg-700);
+  border-radius: var(--radius-lg);
+  color: var(--text-300);
+  font-size: var(--text-body-sm);
 }
 
-.message-bubble-sent .message-text a {
-  color: rgba(255, 255, 255, 0.9);
-  text-decoration: underline;
+.message-system svg {
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 
-.message-bubble-sent .message-text a:hover {
-  color: white;
+.message-system-text {
+  margin: 0;
 }
 
-/* Code blocks in messages */
-.message-text code {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-code);
-  font-size: 0.9em;
-}
-
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 768px) {
-  .message-sent .message-content,
-  .message-received .message-content {
-    max-width: 80%;
+  .message-container {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .message-content {
+    max-width: 85%;
+  }
+
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+    font-size: var(--text-body-sm);
   }
 
   .message-bubble {
@@ -230,33 +258,5 @@
 
   .message-text {
     font-size: var(--text-body-sm);
-  }
-
-  .avatar-circle {
-    width: 32px;
-    height: 32px;
-    font-size: var(--text-caption);
-  }
-}
-
-@media (max-width: 480px) {
-  .message-container {
-    margin-bottom: var(--space-2);
-  }
-
-  .message-sent .message-content,
-  .message-received .message-content {
-    max-width: 85%;
-  }
-
-  .message-system {
-    max-width: 90%;
-    padding: var(--space-2) var(--space-3);
-    font-size: var(--text-caption);
-  }
-
-  .avatar-circle {
-    width: 28px;
-    height: 28px;
   }
 }
