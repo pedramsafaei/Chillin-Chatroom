@@ -1,42 +1,157 @@
-.infoBar {
+/* InfoBar Component - Spaces Design */
+.info-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #2979ff;
-  border-radius: 4px 4px 0 0;
-  height: 60px;
-  width: 100%;
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-700);
+  border-bottom: 1px solid var(--bg-600);
+  min-height: 72px;
 }
 
-.leftInnerContainer {
-  flex: 0.5;
+.info-bar-left {
   display: flex;
   align-items: center;
-  margin-left: 5%;
-  color: white;
+  gap: var(--space-3);
 }
 
-.leftInnerContainer h3 {
-  text-transform: capitalize;
-}
-
-.rightInnerContainer {
+.space-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
   display: flex;
-  flex: 0.5;
-  justify-content: flex-end;
-  margin-right: 5%;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.closeButton {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 20px;
+.space-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.space-name {
+  font-size: var(--text-h3);
+  line-height: var(--text-h3-lh);
+  font-weight: 600;
+  color: var(--text-100);
+  text-transform: capitalize;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.status-indicator.connected {
+  background: var(--success);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+.status-indicator.disconnected {
+  background: var(--text-400);
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0);
+  }
+}
+
+.status-text {
+  font-size: var(--text-caption);
+  color: var(--text-300);
+  font-weight: 500;
+}
+
+.info-bar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--bg-600);
+  border: 1px solid var(--bg-500);
+  border-radius: var(--radius-md);
+  color: var(--text-300);
   cursor: pointer;
-  padding: 10px;
-  transition: color 0.3s;
+  transition: all var(--transition-base);
+  text-decoration: none;
 }
 
-.closeButton:hover {
-  color: #ff6b6b;
+.close-button:hover {
+  background: var(--bg-500);
+  border-color: var(--bg-500);
+  color: var(--error);
+  transform: scale(1.05);
 }
+
+.close-button:active {
+  transform: scale(0.95);
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .info-bar {
+    padding: var(--space-3) var(--space-4);
+    min-height: 64px;
+  }
+
+  .space-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .space-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .space-name {
+    font-size: var(--text-body);
+  }
+
+  .close-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .close-button svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .info-bar {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .status-text {
+    display: none;
+  }
+}
+
