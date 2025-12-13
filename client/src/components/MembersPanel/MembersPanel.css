@@ -1,0 +1,141 @@
+/* Members Panel Styles */
+.members-panel {
+  width: 280px;
+  height: 100%;
+  background: var(--bg-800);
+  border-left: 1px solid var(--bg-700);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.members-header {
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--bg-700);
+}
+
+.members-title {
+  font-size: var(--text-body-sm);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-300);
+}
+
+.members-section {
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--bg-700);
+}
+
+.members-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-5) var(--space-3);
+}
+
+.section-title {
+  font-size: var(--text-caption);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-400);
+}
+
+.section-count {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--text-400);
+  background: var(--bg-700);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.member-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-5);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.member-card:hover {
+  background: var(--bg-700);
+}
+
+.member-card.offline {
+  opacity: 0.5;
+}
+
+.member-avatar {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--blue-from) 0%, var(--purple-from) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 12px;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-800);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-800);
+}
+
+.avatar-text {
+  font-size: var(--text-body);
+  font-weight: 700;
+  color: var(--text-100);
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.member-name {
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  color: var(--text-200);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-role {
+  font-size: var(--text-caption);
+  color: var(--text-400);
+  background: var(--bg-700);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  width: fit-content;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .members-panel {
+    display: none;
+  }
+}

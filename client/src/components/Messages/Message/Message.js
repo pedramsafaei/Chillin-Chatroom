@@ -3,7 +3,7 @@ import ReactEmoji from "react-emoji";
 import "./Message.css";
 import { MessageState } from "../../../hooks/useOptimisticMessages";
 
-const Message = ({ message: { text, user, state, error }, name, onRetry, tempId }) => {
+const Message = ({ message: { text, user, state, error, timestamp, replyTo, reactions }, name, onRetry, tempId }) => {
   let isSentByCurrentUser = false;
   const trimmedName = name.trim().toLowerCase();
   const isAdminMessage = user === "admin";
@@ -11,6 +11,13 @@ const Message = ({ message: { text, user, state, error }, name, onRetry, tempId 
   if (user === trimmedName) {
     isSentByCurrentUser = true;
   }
+
+  // Format timestamp
+  const formatTime = (ts) => {
+    if (!ts) return '';
+    const date = new Date(ts);
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
 
   // Render message state indicator
   const renderStateIndicator = () => {
@@ -46,6 +53,22 @@ const Message = ({ message: { text, user, state, error }, name, onRetry, tempId 
     }
   };
 
+  // Render reactions
+  const renderReactions = () => {
+    if (!reactions || Object.keys(reactions).length === 0) return null;
+    
+    return (
+      <div className="message-reactions">
+        {Object.entries(reactions).map(([emoji, count]) => (
+          <button key={emoji} className="reaction-badge">
+            <span className="reaction-emoji">{emoji}</span>
+            <span className="reaction-count">{count}</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   // Admin/System messages
   if (isAdminMessage) {
     return (
@@ -64,11 +87,17 @@ const Message = ({ message: { text, user, state, error }, name, onRetry, tempId 
   return isSentByCurrentUser ? (
     <div className={`message-container message-sent ${state === MessageState.FAILED ? 'message-failed' : ''}`}>
       <div className="message-content">
+        {replyTo && (
+          <div className="reply-indicator">
+            ↳ Replying to <span className="reply-user">{replyTo.user}</span>
+          </div>
+        )}
         <div className="message-bubble message-bubble-sent">
           <p className="message-text">{ReactEmoji.emojify(text)}</p>
         </div>
+        {renderReactions()}
         <div className="message-meta">
-          <span className="message-sender">You</span>
+          <span className="message-time">{formatTime(timestamp)}</span>
           {renderStateIndicator()}
           {state === MessageState.FAILED && onRetry && (
             <button 
@@ -90,12 +119,19 @@ const Message = ({ message: { text, user, state, error }, name, onRetry, tempId 
         </div>
       </div>
       <div className="message-content">
-        <div className="message-meta">
+        <div className="message-header">
           <span className="message-sender">{user}</span>
+          <span className="message-time">{formatTime(timestamp)}</span>
         </div>
+        {replyTo && (
+          <div className="reply-indicator">
+            ↳ Replying to <span className="reply-user">{replyTo.user}</span>
+          </div>
+        )}
         <div className="message-bubble message-bubble-received">
           <p className="message-text">{ReactEmoji.emojify(text)}</p>
         </div>
+        {renderReactions()}
       </div>
     </div>
   );

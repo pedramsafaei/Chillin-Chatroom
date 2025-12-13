@@ -1,89 +1,56 @@
-/* Chat Page - Spaces Design */
+/* Chat Page - Three Panel Layout */
 .chat-page {
-  min-height: 100vh;
+  height: 100vh;
+  background: linear-gradient(180deg, #0a0a0b 0%, #121220 100%);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+/* Three Panel Layout */
+.chat-layout {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Center Chat Area */
+.chat-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   background: var(--bg-900);
 }
 
-/* Connection Status Banner */
-.connection-banner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  font-size: var(--text-body-sm);
-  font-weight: 500;
-  animation: slideIn var(--transition-base);
-  z-index: 100;
-}
-
-.connection-banner.error {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--error);
-  border-bottom: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.connection-banner.connecting {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--info);
-  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.spinner-small {
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(59, 130, 246, 0.3);
-  border-top-color: var(--info);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-/* Main Chat Container */
-.chat-container {
-  flex: 1;
-  display: flex;
-  height: calc(100vh - var(--space-8));
-  margin: var(--space-4);
-  gap: var(--space-4);
-  animation: fadeIn var(--transition-slow);
-}
-
-/* Chat Main Area */
 .chat-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--bg-800);
-  border: 1px solid var(--bg-700);
-  border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: var(--shadow-xl);
-  min-width: 0;
 }
 
 /* Typing Indicator Bar */
 .typing-indicator-bar {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  background: var(--bg-700);
-  border-top: 1px solid var(--bg-600);
-  animation: fadeIn var(--transition-fast);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-800);
+  border-top: 1px solid var(--bg-700);
+  border-bottom: 1px solid var(--bg-700);
 }
 
 .typing-dots {
   display: flex;
-  gap: var(--space-1);
+  gap: 4px;
 }
 
 .typing-dots span {
   width: 6px;
   height: 6px;
-  background: var(--text-400);
-  border-radius: 50%;
+  background: var(--blue-from);
+  border-radius: var(--radius-full);
   animation: typingDot 1.4s ease-in-out infinite;
 }
 
@@ -101,63 +68,63 @@
 
 @keyframes typingDot {
   0%, 60%, 100% {
-    transform: translateY(0);
-    opacity: 0.7;
+    transform: scale(1);
+    opacity: 0.5;
   }
   30% {
-    transform: translateY(-8px);
+    transform: scale(1.5);
     opacity: 1;
   }
 }
 
 .typing-text {
   font-size: var(--text-body-sm);
-  color: var(--text-300);
+  color: var(--text-400);
   font-style: italic;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .chat-container {
-    flex-direction: column;
-    height: calc(100vh - var(--space-6));
-    margin: var(--space-3);
-  }
+/* Connection Footer */
+.connection-footer {
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-800);
+  border-top: 1px solid var(--bg-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  .chat-main {
-    height: 60vh;
-    min-height: 400px;
+.connection-status {
+  font-size: var(--text-caption);
+  color: var(--text-400);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Responsive Layout */
+@media (max-width: 1024px) {
+  .chat-layout {
+    /* Members panel will be hidden via its own media query */
   }
 }
 
 @media (max-width: 768px) {
-  .chat-container {
-    margin: 0;
-    height: 100vh;
-    border-radius: 0;
+  .chat-layout {
+    /* Sidebar will be hidden via its own media query */
   }
-
-  .chat-main {
-    height: 70vh;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
+  
+  .typing-indicator-bar {
+    padding: var(--space-3) var(--space-4);
   }
-}
-
-@media (max-width: 480px) {
-  .chat-container {
-    gap: 0;
-  }
-
-  .chat-main {
-    height: 100vh;
-    flex: 1;
-  }
-
-  .connection-banner {
-    padding: var(--space-2);
-    font-size: var(--text-caption);
+  
+  .connection-footer {
+    padding: var(--space-2) var(--space-4);
   }
 }
 
+/* Legacy styles for backwards compatibility */
+.chat-container {
+  display: flex;
+  height: 100%;
+}

@@ -6,6 +6,8 @@ import Input from "../Input/Input";
 import Messages from "../Messages/Messages";
 import TextContainer from "../TextContainer/TextContainer";
 import ConnectionStatus from "../ConnectionStatus/ConnectionStatus";
+import Sidebar from "../Sidebar/Sidebar";
+import MembersPanel from "../MembersPanel/MembersPanel";
 
 import { useSocketConnection, ConnectionState } from "../../hooks/useSocketConnection";
 import { useOptimisticMessages, MessageState } from "../../hooks/useOptimisticMessages";
@@ -241,31 +243,44 @@ const Chat = ({ location }) => {
         onRetry={reconnect}
       />
 
-      <div className="chat-container">
-        <div className="chat-main">
-          <InfoBar room={room} isConnected={isConnected} />
-          <Messages messages={messages} name={name} onRetry={handleRetry} />
-          {typingUsers.length > 0 && (
-            <div className="typing-indicator-bar">
-              <div className="typing-dots">
-                <span></span>
-                <span></span>
-                <span></span>
+      <div className="chat-layout">
+        {/* Left Sidebar */}
+        <Sidebar currentRoom={room} currentUser={name} />
+
+        {/* Center Chat Area */}
+        <div className="chat-center">
+          <div className="chat-main">
+            <InfoBar room={room} isConnected={isConnected} />
+            <Messages messages={messages} name={name} onRetry={handleRetry} />
+            {typingUsers.length > 0 && (
+              <div className="typing-indicator-bar">
+                <div className="typing-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span className="typing-text">
+                  {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
+                </span>
               </div>
-              <span className="typing-text">
-                {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
+            )}
+            <Input
+              message={message}
+              setMessage={setMessage}
+              sendMessage={sendMessage}
+              handleTyping={handleTyping}
+              isConnected={isConnected}
+            />
+            <div className="connection-footer">
+              <span className="connection-status">
+                {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
               </span>
             </div>
-          )}
-          <Input
-            message={message}
-            setMessage={setMessage}
-            sendMessage={sendMessage}
-            handleTyping={handleTyping}
-            isConnected={isConnected}
-          />
+          </div>
         </div>
-        <TextContainer users={users} room={room} />
+
+        {/* Right Members Panel */}
+        <MembersPanel users={users} currentUser={name} />
       </div>
     </div>
   );
