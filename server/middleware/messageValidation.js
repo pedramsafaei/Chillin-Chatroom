@@ -1,4 +1,5 @@
 const presenceManager = require('../redis/presence');
+const sessionManager = require('../redis/session');
 const Room = require('../database/models/Room');
 
 // Rate limiting cache (simple in-memory, could use Redis)
@@ -13,22 +14,38 @@ class MessageValidator {
 
   // Step 1: Authentication check
   async validateAuthentication(socketId) {
-    const user = await presenceManager.getUser(socketId);
+    const sessionData = await sessionManager.getSessionBySocketId(socketId);
     
-    if (!user) {
+    if (!sessionData) {
       return {
         valid: false,
         error: 'User not authenticated. Please rejoin the room.',
       };
     }
 
-    return { valid: true, user };
+    const username = sessionData.userId;
+    const presence = await presenceManager.getUserPresence(username);
+
+    if (!presence) {
+      return {
+        valid: false,
+        error: 'User presence not found. Please rejoin the room.',
+      };
+    }
+
+    return { 
+      valid: true, 
+      user: { 
+        username, 
+        roomName: presence.currentRoom,
+        socketId 
+      } 
+    };
   }
 
   // Step 2: Room membership verification
   async validateRoomMembership(username, roomName) {
-    const usersInRoom = await presenceManager.getUsersInRoom(roomName);
-    const isMember = usersInRoom.some(user => user.username === username);
+    const isMember = await presenceManager.isUserInRoom(roomName, username);
 
     if (!isMember) {
       return {
