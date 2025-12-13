@@ -11,10 +11,15 @@ const Room = require("./database/models/Room");
 const Message = require("./database/models/Message");
 
 // Redis imports
-const { initRedis, getRedisAdapter } = require("./redis/connection");
-const presenceManager = require("./redis/presence");
-const sessionManager = require("./redis/session");
-const cacheManager = require("./redis/cache");
+const { 
+  initRedis, 
+  getRedisAdapter, 
+  sessionManager, 
+  presenceManager, 
+  cacheManager,
+  messageQueue,
+  pubsubManager 
+} = require("./redis");
 
 // Storage imports
 const { initS3 } = require("./storage/s3Client");
@@ -67,6 +72,37 @@ const initInfrastructure = async () => {
     // Configure Socket.io with Redis adapter
     io.adapter(getRedisAdapter());
     
+    // Subscribe to presence updates for cross-server synchronization
+    await pubsubManager.subscribeToPresence((data) => {
+      console.log('Presence update received:', data);
+      // Broadcast presence changes to connected clients
+      io.emit('presenceUpdate', data);
+    });
+
+    // Subscribe to system announcements
+    await pubsubManager.subscribeToSystem((data) => {
+      console.log('System announcement received:', data);
+      // Broadcast to all connected clients
+      io.emit('systemMessage', data.announcement);
+    });
+
+    // Subscribe to all room channels using pattern matching
+    // This allows multiple server instances to sync messages
+    await pubsubManager.psubscribe('room:*', (data, channel) => {
+      if (data.type === 'room_message') {
+        // Message already handled by Redis adapter, but could add additional logic
+        console.log(`Message in ${channel}:`, data.message);
+      } else if (data.type === 'typing_indicator') {
+        // Sync typing indicators across servers
+        const roomName = data.roomId;
+        if (data.isTyping) {
+          io.to(roomName).emit('userTyping', { user: data.userId });
+        } else {
+          io.to(roomName).emit('userStoppedTyping', { user: data.userId });
+        }
+      }
+    });
+    
     // Initialize S3/MinIO (if credentials are provided)
     if (process.env.S3_ACCESS_KEY_ID || process.env.USE_MINIO === 'true') {
       initS3();
@@ -87,11 +123,16 @@ app.post("/api/auth/register", async (req, res) => {
       return res.status(400).json({ error: result.error });
     }
     
-    // Create session in Redis
-    const sessionId = await sessionManager.createSession(result.user.username, {
-      email: result.user.email,
-      avatar: result.user.avatar
-    });
+    // Create session in Redis with proper fields
+    // Note: socketId will be set when user connects via Socket.io
+    const sessionId = await sessionManager.createSession(
+      result.user.username,
+      'pending', // socketId will be updated on connection
+      {
+        userAgent: req.headers['user-agent'] || 'unknown',
+        ip: req.ip || req.connection.remoteAddress || 'unknown'
+      }
+    );
     
     res.json({ user: result.user, token: sessionId });
   } catch (error) {
@@ -107,11 +148,15 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(400).json({ error: result.error });
     }
     
-    // Create session in Redis
-    const sessionId = await sessionManager.createSession(result.user.username, {
-      email: result.user.email,
-      avatar: result.user.avatar
-    });
+    // Create session in Redis with proper fields
+    const sessionId = await sessionManager.createSession(
+      result.user.username,
+      'pending', // socketId will be updated on connection
+      {
+        userAgent: req.headers['user-agent'] || 'unknown',
+        ip: req.ip || req.connection.remoteAddress || 'unknown'
+      }
+    );
     
     res.json({ user: result.user, token: sessionId });
   } catch (error) {
@@ -209,6 +254,17 @@ app.get("/api/rooms/:roomName/messages", async (req, res) => {
 io.on("connection", (socket) => {
   console.log("New connection established:", socket.id);
 
+  // Heartbeat mechanism - client should emit this every 30 seconds
+  socket.on("heartbeat", async ({ userId }) => {
+    try {
+      if (userId) {
+        await presenceManager.refreshPresence(userId);
+      }
+    } catch (error) {
+      console.error("Error in heartbeat:", error);
+    }
+  });
+
   socket.on("join", async ({ name, room }, callback) => {
     try {
       // Validate inputs
@@ -223,12 +279,39 @@ io.on("connection", (socket) => {
       const username = name.trim().toLowerCase();
       const roomName = room.trim().toLowerCase();
 
-      // Add user to Redis presence
-      await presenceManager.addUserToRoom(socket.id, username, roomName);
+      // Set user presence in Redis using HASH
+      await presenceManager.setUserPresence(username, {
+        status: 'online',
+        currentRoom: roomName,
+        typing: 'false'
+      });
+
+      // Add user to room members SET
+      await presenceManager.addUserToRoom(roomName, username);
+
+      // Update session with socket ID
+      const sessionData = await sessionManager.getSessionBySocketId(socket.id);
+      if (!sessionData) {
+        // Create new session if doesn't exist
+        await sessionManager.createSession(username, socket.id, {
+          userAgent: socket.handshake.headers['user-agent'] || 'unknown',
+          ip: socket.handshake.address || 'unknown'
+        });
+      } else {
+        // Update existing session with new socket ID
+        await sessionManager.updateSession(sessionData.sessionId, {
+          socketId: socket.id
+        });
+      }
+
+      // Check for queued messages
+      const queuedMessages = await messageQueue.dequeueMessages(username);
+      if (queuedMessages.length > 0) {
+        socket.emit("queuedMessages", { messages: queuedMessages });
+      }
 
       // Load message history from database
       const messageHistory = await Message.findByRoom(roomName);
-
       socket.emit("messageHistory", { messages: messageHistory });
 
       socket.emit("message", {
@@ -244,8 +327,8 @@ io.on("connection", (socket) => {
       socket.join(roomName);
 
       // Send room data to all users in the room
-      const usersInRoom = await presenceManager.getUsersInRoom(roomName);
-      const usersList = usersInRoom.map(u => ({ id: u.socketId, name: u.username, room: u.roomName }));
+      const members = await presenceManager.getRoomMembers(roomName);
+      const usersList = members.map(u => ({ id: u, name: u, room: roomName }));
       
       io.to(roomName).emit("roomData", {
         room: roomName,
@@ -253,10 +336,16 @@ io.on("connection", (socket) => {
       });
 
       // Update room member count in database
-      await Room.updateMemberCount(roomName, usersInRoom.length);
+      await Room.updateMemberCount(roomName, members.length);
       
       // Invalidate cache
       await cacheManager.delete('rooms:list');
+
+      // Publish presence update
+      await pubsubManager.publishPresenceUpdate(username, {
+        status: 'online',
+        currentRoom: roomName
+      });
 
       callback();
     } catch (error) {
@@ -267,6 +356,21 @@ io.on("connection", (socket) => {
 
   socket.on("sendMessage", async (message, callback) => {
     try {
+      // Get session to find user
+      const sessionData = await sessionManager.getSessionBySocketId(socket.id);
+      if (!sessionData) {
+        return callback("Session not found. Please reconnect.");
+      }
+
+      const username = sessionData.userId;
+      const presence = await presenceManager.getUserPresence(username);
+      
+      if (!presence) {
+        return callback("User presence not found. Please rejoin the room.");
+      }
+
+      const roomName = presence.currentRoom;
+
       // Run validation pipeline
       const validationResult = await messageValidator.validate(socket.id, message);
       
@@ -274,25 +378,28 @@ io.on("connection", (socket) => {
         return callback(validationResult.error);
       }
 
-      const { user, sanitizedMessage } = validationResult;
+      const { sanitizedMessage } = validationResult;
 
       // Save message to database
       const savedMessage = await Message.create({
-        roomName: user.roomName,
-        username: user.username,
+        roomName: roomName,
+        username: username,
         text: sanitizedMessage
       });
 
       // Prepare message data with database ID
       const messageData = {
         id: savedMessage.id,
-        user: user.username,
+        user: username,
         text: sanitizedMessage,
         timestamp: savedMessage.timestamp
       };
 
-      // Broadcast to all users in the room (including sender)
-      io.to(user.roomName).emit("message", messageData);
+      // Publish message via pub/sub for scalability across multiple server instances
+      await pubsubManager.publishToRoom(roomName, messageData);
+
+      // Also broadcast directly (for same server instance)
+      io.to(roomName).emit("message", messageData);
       
       // Send confirmation to sender with message ID
       socket.emit("messageConfirmed", {
@@ -301,8 +408,17 @@ io.on("connection", (socket) => {
         timestamp: savedMessage.timestamp
       });
 
+      // Check which room members are offline and queue message for them
+      const members = await presenceManager.getRoomMembers(roomName);
+      for (const member of members) {
+        const memberPresence = await presenceManager.getUserPresence(member);
+        if (!memberPresence || memberPresence.status !== 'online') {
+          await messageQueue.enqueueMessage(member, messageData);
+        }
+      }
+
       // Invalidate message cache for this room
-      await cacheManager.deletePattern(`messages:${user.roomName}:*`);
+      await cacheManager.deletePattern(`messages:${roomName}:*`);
 
       callback();
     } catch (error) {
@@ -313,14 +429,31 @@ io.on("connection", (socket) => {
 
   socket.on("typing", async () => {
     try {
-      const user = await presenceManager.getUser(socket.id);
-      if (user) {
-        socket.broadcast.to(user.roomName).emit("userTyping", {
-          user: user.username,
-        });
+      const sessionData = await sessionManager.getSessionBySocketId(socket.id);
+      if (!sessionData) return;
+
+      const username = sessionData.userId;
+      const presence = await presenceManager.getUserPresence(username);
+      
+      if (presence) {
+        const roomName = presence.currentRoom;
         
-        // Update presence timestamp
-        await presenceManager.updatePresence(socket.id);
+        // Add to typing SORTED SET with timestamp
+        await presenceManager.setUserTyping(roomName, username);
+        
+        // Update presence field
+        await presenceManager.updatePresenceField(username, 'typing', 'true');
+        
+        // Broadcast to room
+        socket.broadcast.to(roomName).emit("userTyping", {
+          user: username,
+        });
+
+        // Publish typing indicator
+        await pubsubManager.publishTypingIndicator(roomName, username, true);
+        
+        // Refresh presence
+        await presenceManager.refreshPresence(username);
       }
     } catch (error) {
       console.error("Error in typing event:", error);
@@ -329,11 +462,28 @@ io.on("connection", (socket) => {
 
   socket.on("stopTyping", async () => {
     try {
-      const user = await presenceManager.getUser(socket.id);
-      if (user) {
-        socket.broadcast.to(user.roomName).emit("userStoppedTyping", {
-          user: user.username,
+      const sessionData = await sessionManager.getSessionBySocketId(socket.id);
+      if (!sessionData) return;
+
+      const username = sessionData.userId;
+      const presence = await presenceManager.getUserPresence(username);
+      
+      if (presence) {
+        const roomName = presence.currentRoom;
+        
+        // Remove from typing SORTED SET
+        await presenceManager.removeUserTyping(roomName, username);
+        
+        // Update presence field
+        await presenceManager.updatePresenceField(username, 'typing', 'false');
+        
+        // Broadcast to room
+        socket.broadcast.to(roomName).emit("userStoppedTyping", {
+          user: username,
         });
+
+        // Publish typing indicator
+        await pubsubManager.publishTypingIndicator(roomName, username, false);
       }
     } catch (error) {
       console.error("Error in stopTyping event:", error);
@@ -342,28 +492,61 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", async () => {
     try {
-      const user = await presenceManager.removeUserFromRoom(socket.id);
+      const sessionData = await sessionManager.getSessionBySocketId(socket.id);
+      
+      if (sessionData) {
+        const username = sessionData.userId;
+        const presence = await presenceManager.getUserPresence(username);
 
-      if (user) {
-        io.to(user.roomName).emit("message", {
-          user: "admin",
-          text: `${user.username} has left.`,
-        });
+        if (presence) {
+          const roomName = presence.currentRoom;
 
-        // Update room data for remaining users
-        const usersInRoom = await presenceManager.getUsersInRoom(user.roomName);
-        const usersList = usersInRoom.map(u => ({ id: u.socketId, name: u.username, room: u.roomName }));
-        
-        io.to(user.roomName).emit("roomData", {
-          room: user.roomName,
-          users: usersList,
-        });
+          // Remove user from room members
+          await presenceManager.removeUserFromRoom(roomName, username);
 
-        // Update room member count in database
-        await Room.updateMemberCount(user.roomName, usersInRoom.length);
-        
-        // Invalidate cache
-        await cacheManager.delete('rooms:list');
+          // Remove from typing indicators
+          await presenceManager.removeUserTyping(roomName, username);
+
+          // Update presence to offline
+          await presenceManager.updatePresenceField(username, 'status', 'offline');
+
+          io.to(roomName).emit("message", {
+            user: "admin",
+            text: `${username} has left.`,
+          });
+
+          // Update room data for remaining users
+          const members = await presenceManager.getRoomMembers(roomName);
+          const usersList = members.map(u => ({ id: u, name: u, room: roomName }));
+          
+          io.to(roomName).emit("roomData", {
+            room: roomName,
+            users: usersList,
+          });
+
+          // Update room member count in database
+          await Room.updateMemberCount(roomName, members.length);
+          
+          // Invalidate cache
+          await cacheManager.delete('rooms:list');
+
+          // Publish presence update
+          await pubsubManager.publishPresenceUpdate(username, {
+            status: 'offline',
+            currentRoom: ''
+          });
+
+          // Clean up presence after a delay (user might reconnect)
+          setTimeout(async () => {
+            const currentPresence = await presenceManager.getUserPresence(username);
+            if (currentPresence && currentPresence.status === 'offline') {
+              await presenceManager.deleteUserPresence(username);
+            }
+          }, 60000); // 1 minute grace period
+        }
+
+        // Delete session
+        await sessionManager.deleteSession(sessionData.sessionId);
       }
 
       console.log("User disconnected:", socket.id);
@@ -391,6 +574,9 @@ process.on('SIGTERM', async () => {
   const { closeDatabase } = require('./database/connection');
   const { closeRedis } = require('./redis/connection');
   
+  // Clean up pub/sub subscribers
+  await pubsubManager.cleanup();
+  
   await closeDatabase();
   await closeRedis();
   server.close(() => {
@@ -398,4 +584,15 @@ process.on('SIGTERM', async () => {
     process.exit(0);
   });
 });
+
+// Periodic cleanup of typing indicators (every 10 seconds)
+setInterval(async () => {
+  try {
+    // This would clean up old typing indicators across all rooms
+    // In production, you might want to track active rooms
+    // For now, the auto-cleanup happens on read via getUsersTyping()
+  } catch (error) {
+    console.error('Error in typing cleanup:', error);
+  }
+}, 10000);
 
