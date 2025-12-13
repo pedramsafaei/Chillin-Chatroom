@@ -20,6 +20,7 @@ const Chat = ({ location }) => {
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("");
   const [typingUsers, setTypingUsers] = useState([]);
+  const [replyingTo, setReplyingTo] = useState(null);
   
   const typingTimeoutRef = useRef(null);
   const ENDPOINT = process.env.REACT_APP_ENDPOINT || "localhost:5000";
@@ -232,6 +233,32 @@ const Chat = ({ location }) => {
     };
   }, []);
 
+  // Handle reply
+  const handleReply = useCallback((messageData) => {
+    setReplyingTo(messageData);
+  }, []);
+
+  // Clear reply
+  const handleClearReply = useCallback(() => {
+    setReplyingTo(null);
+  }, []);
+
+  // Handle reaction
+  const handleReact = useCallback((messageId, emoji) => {
+    if (!socket || !isConnected) return;
+    
+    // TODO: Implement reaction logic with backend
+    socket.emit("addReaction", { messageId, emoji });
+  }, [socket, isConnected]);
+
+  // Handle file upload
+  const handleFileUpload = useCallback((file) => {
+    if (!socket || !isConnected) return;
+    
+    // TODO: Implement file upload logic with backend
+    console.log("File upload:", file);
+  }, [socket, isConnected]);
+
   return (
     <div className="chat-page">
       <ConnectionStatus
@@ -251,7 +278,13 @@ const Chat = ({ location }) => {
         <div className="chat-center">
           <div className="chat-main">
             <InfoBar room={room} isConnected={isConnected} />
-            <Messages messages={messages} name={name} onRetry={handleRetry} />
+            <Messages 
+              messages={messages} 
+              name={name} 
+              onRetry={handleRetry}
+              onReply={handleReply}
+              onReact={handleReact}
+            />
             {typingUsers.length > 0 && (
               <div className="typing-indicator-bar">
                 <div className="typing-dots">
@@ -270,6 +303,10 @@ const Chat = ({ location }) => {
               sendMessage={sendMessage}
               handleTyping={handleTyping}
               isConnected={isConnected}
+              room={room}
+              replyingTo={replyingTo}
+              onClearReply={handleClearReply}
+              onFileUpload={handleFileUpload}
             />
             <div className="connection-footer">
               <span className="connection-status">
