@@ -1,8 +1,9 @@
 import React from "react";
 import ReactEmoji from "react-emoji";
 import "./Message.css";
+import { MessageState } from "../../../hooks/useOptimisticMessages";
 
-const Message = ({ message: { text, user }, name }) => {
+const Message = ({ message: { text, user, state, error }, name, onRetry, tempId }) => {
   let isSentByCurrentUser = false;
   const trimmedName = name.trim().toLowerCase();
   const isAdminMessage = user === "admin";
@@ -10,6 +11,40 @@ const Message = ({ message: { text, user }, name }) => {
   if (user === trimmedName) {
     isSentByCurrentUser = true;
   }
+
+  // Render message state indicator
+  const renderStateIndicator = () => {
+    if (!isSentByCurrentUser) return null;
+
+    switch (state) {
+      case MessageState.SENDING:
+        return (
+          <span className="message-state sending" title="Sending...">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.5"/>
+            </svg>
+          </span>
+        );
+      case MessageState.SENT:
+        return (
+          <span className="message-state sent" title="Sent">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M13.5 3L6 10.5L2.5 7" stroke="currentColor" strokeWidth="2" fill="none"/>
+            </svg>
+          </span>
+        );
+      case MessageState.FAILED:
+        return (
+          <span className="message-state failed" title={error || "Failed to send"}>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm1 10H7V9h2v2zm0-3H7V5h2v3z"/>
+            </svg>
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
 
   // Admin/System messages
   if (isAdminMessage) {
@@ -27,13 +62,23 @@ const Message = ({ message: { text, user }, name }) => {
 
   // User messages
   return isSentByCurrentUser ? (
-    <div className="message-container message-sent">
+    <div className={`message-container message-sent ${state === MessageState.FAILED ? 'message-failed' : ''}`}>
       <div className="message-content">
         <div className="message-bubble message-bubble-sent">
           <p className="message-text">{ReactEmoji.emojify(text)}</p>
         </div>
         <div className="message-meta">
           <span className="message-sender">You</span>
+          {renderStateIndicator()}
+          {state === MessageState.FAILED && onRetry && (
+            <button 
+              className="message-retry-btn" 
+              onClick={() => onRetry(tempId)}
+              title="Retry sending message"
+            >
+              Retry
+            </button>
+          )}
         </div>
       </div>
     </div>
