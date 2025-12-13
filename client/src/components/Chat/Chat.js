@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import queryString from "query-string";
-import io from "socket.io-client";
 
 import InfoBar from "../InfoBar/InfoBar";
 import Input from "../Input/Input";
 import Messages from "../Messages/Messages";
 import TextContainer from "../TextContainer/TextContainer";
+import ConnectionStatus from "../ConnectionStatus/ConnectionStatus";
+
+import { useSocketConnection, ConnectionState } from "../../hooks/useSocketConnection";
+import { useOptimisticMessages, MessageState } from "../../hooks/useOptimisticMessages";
 
 import "./Chat.css";
 
@@ -14,15 +17,37 @@ const Chat = ({ location }) => {
   const [room, setRoom] = useState("");
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(true);
-  const [connectionError, setConnectionError] = useState(null);
   
-  const socketRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const ENDPOINT = process.env.REACT_APP_ENDPOINT || "localhost:5000";
+
+  // Use connection hook
+  const {
+    socket,
+    connectionState,
+    error: connectionError,
+    retryAttempt,
+    maxRetryAttempts,
+    retryDelay,
+    connect,
+    reconnect,
+    isConnected,
+  } = useSocketConnection(ENDPOINT);
+
+  // Use optimistic messages hook
+  const {
+    messages,
+    addOptimisticMessage,
+    confirmMessage,
+    markMessageFailed,
+    retryMessage,
+    addReceivedMessage,
+    queueMessage,
+    getQueuedMessages,
+    clearQueue,
+    setAllMessages,
+  } = useOptimisticMessages();
 
   // Initialize socket connection
   useEffect(() => {
@@ -36,163 +61,190 @@ const Chat = ({ location }) => {
     setRoom(room);
     setName(name);
 
-    // Create socket connection
-    socketRef.current = io(ENDPOINT, {
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+    // Connect socket
+    const socketInstance = connect();
+
+    return () => {
+      if (socketInstance) {
+        socketInstance.disconnect();
+      }
+    };
+  }, [location.search, connect]);
+
+  // Join room when connected
+  useEffect(() => {
+    if (!socket || !isConnected || !name || !room) return;
+
+    socket.emit("join", { name, room }, (error) => {
+      if (error) {
+        alert(error);
+        window.location.href = "/";
+      }
     });
 
-    const socket = socketRef.current;
-
-    // Connection status handlers
-    socket.on("connect", () => {
-      console.log("Socket connected");
-      setIsConnected(true);
-      setIsConnecting(false);
-      setConnectionError(null);
-      
-      // Join room after connection
-      socket.emit("join", { name, room }, (error) => {
-        if (error) {
-          alert(error);
-          window.location.href = "/";
-        }
+    // Send queued messages after reconnection
+    const queuedMessages = getQueuedMessages();
+    if (queuedMessages.length > 0) {
+      queuedMessages.forEach(queuedMsg => {
+        socket.emit("sendMessage", { text: queuedMsg.text, tempId: queuedMsg.tempId }, (error) => {
+          if (error) {
+            markMessageFailed(queuedMsg.tempId, error);
+          }
+        });
       });
-    });
+      clearQueue();
+    }
+  }, [socket, isConnected, name, room, getQueuedMessages, clearQueue, markMessageFailed]);
 
-    socket.on("disconnect", () => {
-      console.log("Socket disconnected");
-      setIsConnected(false);
-    });
+  // Setup socket event listeners
+  useEffect(() => {
+    if (!socket) return;
 
-    socket.on("connect_error", (error) => {
-      console.error("Connection error:", error);
-      setConnectionError("Connection lost. Trying to reconnect...");
-      setIsConnecting(false);
-    });
+    // Message history
+    const handleMessageHistory = ({ messages }) => {
+      setAllMessages(messages);
+    };
 
-    socket.on("reconnect", (attemptNumber) => {
-      console.log("Reconnected after", attemptNumber, "attempts");
-      setIsConnected(true);
-      setConnectionError(null);
-      
-      // Rejoin room after reconnection
-      socket.emit("join", { name, room }, (error) => {
-        if (error) {
-          console.error("Error rejoining room:", error);
-        }
-      });
-    });
+    // New message from server
+    const handleMessage = (message) => {
+      // Check if this is our own message (already shown optimistically)
+      if (message.user !== name.trim().toLowerCase()) {
+        addReceivedMessage(message);
+      }
+    };
 
-    // Message handlers
-    socket.on("message", (message) => {
-      setMessages((messages) => [...messages, message]);
-    });
+    // Message confirmation
+    const handleMessageConfirmed = ({ tempId, id, timestamp }) => {
+      confirmMessage(tempId, { id, timestamp });
+    };
 
-    socket.on("messageHistory", ({ messages }) => {
-      setMessages(messages);
-    });
-
-    socket.on("roomData", ({ users }) => {
+    // Room data
+    const handleRoomData = ({ users }) => {
       setUsers(users);
-    });
+    };
 
     // Typing indicators
-    socket.on("userTyping", ({ user }) => {
+    const handleUserTyping = ({ user }) => {
       setTypingUsers((prev) => {
         if (!prev.includes(user)) {
           return [...prev, user];
         }
         return prev;
       });
-    });
-
-    socket.on("userStoppedTyping", ({ user }) => {
-      setTypingUsers((prev) => prev.filter((u) => u !== user));
-    });
-
-    // Cleanup function
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.off("connect");
-        socketRef.current.off("disconnect");
-        socketRef.current.off("connect_error");
-        socketRef.current.off("reconnect");
-        socketRef.current.off("message");
-        socketRef.current.off("messageHistory");
-        socketRef.current.off("roomData");
-        socketRef.current.off("userTyping");
-        socketRef.current.off("userStoppedTyping");
-        socketRef.current.disconnect();
-      }
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
     };
-  }, [ENDPOINT, location.search]);
 
-  const sendMessage = (event) => {
+    const handleUserStoppedTyping = ({ user }) => {
+      setTypingUsers((prev) => prev.filter((u) => u !== user));
+    };
+
+    // Register listeners
+    socket.on("messageHistory", handleMessageHistory);
+    socket.on("message", handleMessage);
+    socket.on("messageConfirmed", handleMessageConfirmed);
+    socket.on("roomData", handleRoomData);
+    socket.on("userTyping", handleUserTyping);
+    socket.on("userStoppedTyping", handleUserStoppedTyping);
+
+    // Cleanup
+    return () => {
+      socket.off("messageHistory", handleMessageHistory);
+      socket.off("message", handleMessage);
+      socket.off("messageConfirmed", handleMessageConfirmed);
+      socket.off("roomData", handleRoomData);
+      socket.off("userTyping", handleUserTyping);
+      socket.off("userStoppedTyping", handleUserStoppedTyping);
+    };
+  }, [socket, name, addReceivedMessage, confirmMessage, setAllMessages]);
+
+  // Send message
+  const sendMessage = useCallback((event) => {
     event.preventDefault();
 
-    if (!socketRef.current) {
-      alert("Not connected to server. Please refresh the page.");
-      return;
-    }
+    if (!message.trim()) return;
 
-    if (message.trim()) {
-      socketRef.current.emit("sendMessage", message, (error) => {
-        if (error) {
-          alert(error);
-        }
-      });
-      setMessage("");
-      socketRef.current.emit("stopTyping");
+    const messageText = message.trim();
+    setMessage("");
+
+    // Stop typing indicator
+    if (socket && isConnected) {
+      socket.emit("stopTyping");
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = null;
       }
     }
-  };
 
-  const handleTyping = () => {
-    if (!socketRef.current) return;
+    if (!socket || !isConnected) {
+      // Queue message if not connected
+      const tempId = queueMessage(messageText, name);
+      addOptimisticMessage(messageText, name.trim().toLowerCase());
+      return;
+    }
 
-    socketRef.current.emit("typing");
+    // Add optimistic message
+    const tempId = addOptimisticMessage(messageText, name.trim().toLowerCase());
+
+    // Send to server
+    socket.emit("sendMessage", { text: messageText, tempId }, (error) => {
+      if (error) {
+        markMessageFailed(tempId, error);
+      }
+    });
+  }, [message, socket, isConnected, name, addOptimisticMessage, markMessageFailed, queueMessage]);
+
+  // Retry failed message
+  const handleRetry = useCallback((tempId) => {
+    const msg = retryMessage(tempId);
+    if (msg && socket && isConnected) {
+      socket.emit("sendMessage", { text: msg.text, tempId: msg.tempId }, (error) => {
+        if (error) {
+          markMessageFailed(msg.tempId, error);
+        }
+      });
+    }
+  }, [socket, isConnected, retryMessage, markMessageFailed]);
+
+  // Handle typing
+  const handleTyping = useCallback(() => {
+    if (!socket || !isConnected) return;
+
+    socket.emit("typing");
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      if (socketRef.current) {
-        socketRef.current.emit("stopTyping");
+      if (socket && isConnected) {
+        socket.emit("stopTyping");
       }
     }, 1000);
-  };
+  }, [socket, isConnected]);
+
+  // Cleanup typing timeout
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="chat-page">
-      {connectionError && (
-        <div className="connection-banner error">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 13c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm-.5-9h1v5h-1V5zm0 6h1v1h-1v-1z" fill="currentColor"/>
-          </svg>
-          {connectionError}
-        </div>
-      )}
-      
-      {isConnecting && (
-        <div className="connection-banner connecting">
-          <span className="spinner-small"></span>
-          Connecting to server...
-        </div>
-      )}
+      <ConnectionStatus
+        connectionState={connectionState}
+        error={connectionError}
+        retryAttempt={retryAttempt}
+        maxRetryAttempts={maxRetryAttempts}
+        retryDelay={retryDelay}
+        onRetry={reconnect}
+      />
 
       <div className="chat-container">
         <div className="chat-main">
           <InfoBar room={room} isConnected={isConnected} />
-          <Messages messages={messages} name={name} />
+          <Messages messages={messages} name={name} onRetry={handleRetry} />
           {typingUsers.length > 0 && (
             <div className="typing-indicator-bar">
               <div className="typing-dots">

@@ -50,6 +50,12 @@
   border-bottom-right-radius: var(--radius-sm);
 }
 
+/* Failed message styling */
+.message-failed .message-bubble {
+  opacity: 0.7;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
 /* Received Messages */
 .message-received {
   justify-content: flex-start;
@@ -127,6 +133,52 @@
   font-size: var(--text-caption);
   color: var(--text-400);
   font-weight: 600;
+}
+
+/* Message State Indicators */
+.message-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-state.sending {
+  color: var(--text-400);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.message-state.sent {
+  color: var(--text-400);
+}
+
+.message-state.failed {
+  color: #e74c3c;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Retry Button */
+.message-retry-btn {
+  background: transparent;
+  border: 1px solid var(--text-400);
+  color: var(--text-400);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.message-retry-btn:hover {
+  background: var(--text-400);
+  color: var(--bg-800);
 }
 
 /* Hover Effects */
@@ -208,4 +260,3 @@
     height: 28px;
   }
 }
-
