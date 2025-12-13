@@ -1,17 +1,183 @@
+/* Input Section */
+.input-section {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-800);
+  border-top: 1px solid var(--bg-700);
+}
+
+/* Reply Bar */
+.reply-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-700);
+  border-bottom: 1px solid var(--bg-600);
+  animation: slideDown 150ms ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reply-bar-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.reply-bar-content svg {
+  color: var(--blue-from);
+  flex-shrink: 0;
+}
+
+.reply-bar-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 1;
+}
+
+.reply-bar-label {
+  font-size: var(--text-caption);
+  color: var(--text-400);
+}
+
+.reply-bar-label strong {
+  color: var(--blue-from);
+  font-weight: 600;
+}
+
+.reply-bar-message {
+  font-size: var(--text-body-sm);
+  color: var(--text-300);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reply-bar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  color: var(--text-400);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.reply-bar-close:hover {
+  background: var(--bg-600);
+  color: var(--text-200);
+}
+
+/* Upload Progress Bar */
+.upload-progress-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-700);
+  border-bottom: 1px solid var(--bg-600);
+  animation: slideDown 150ms ease-out;
+}
+
+.upload-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.upload-filename {
+  font-size: var(--text-body-sm);
+  color: var(--text-200);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-percentage {
+  font-size: var(--text-caption);
+  color: var(--text-400);
+  font-weight: 600;
+}
+
+.upload-progress {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-600);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.upload-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue-from), var(--blue-to));
+  transition: width 200ms ease-out;
+  border-radius: var(--radius-full);
+}
+
+.upload-cancel {
+  align-self: flex-start;
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid var(--bg-600);
+  color: var(--text-400);
+  border-radius: var(--radius-md);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.upload-cancel:hover {
+  background: var(--bg-600);
+  color: var(--text-200);
+  border-color: var(--bg-500);
+}
+
 /* Input Container */
 .input-container {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-4) var(--space-5);
-  background: var(--bg-800);
-  border-top: 1px solid var(--bg-700);
+  position: relative;
+}
+
+.input-left-actions {
+  position: relative;
 }
 
 .input-wrapper {
   position: relative;
   flex: 1;
   min-width: 0;
+  transition: all var(--transition-base);
+}
+
+.input-focused {
+  transform: scale(1.01);
 }
 
 .message-input {
@@ -75,6 +241,67 @@
 .input-action-btn:hover {
   background: var(--bg-700);
   color: var(--text-200);
+  transform: scale(1.05);
+}
+
+.input-action-btn:active {
+  transform: scale(0.95);
+}
+
+/* Attachment Menu */
+.attachment-menu {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  left: 0;
+  background: var(--bg-700);
+  border: 1px solid var(--bg-600);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-2);
+  min-width: 200px;
+  z-index: 100;
+  animation: slideUpFade 150ms ease-out;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.attachment-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  background: transparent;
+  border: none;
+  color: var(--text-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.attachment-option:hover {
+  background: var(--bg-600);
+  transform: translateX(4px);
+}
+
+.attachment-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.attachment-label {
+  font-size: var(--text-body-sm);
+  font-weight: 500;
 }
 
 /* Send Button */
@@ -84,7 +311,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--blue-from) 0%, var(--blue-to) 100%);
+  background: var(--bg-600);
   border: none;
   color: var(--text-100);
   border-radius: var(--radius-md);
@@ -92,6 +319,12 @@
   transition: all var(--transition-base);
   flex-shrink: 0;
   box-shadow: var(--shadow-sm);
+  opacity: 0.5;
+}
+
+.send-button-active {
+  background: linear-gradient(135deg, var(--blue-from) 0%, var(--blue-to) 100%);
+  opacity: 1;
 }
 
 .send-button:hover:not(:disabled) {
@@ -111,17 +344,37 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .input-section {
+    border-top: 2px solid var(--bg-700);
+  }
+
+  .reply-bar {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .upload-progress-bar {
+    padding: var(--space-3) var(--space-4);
+  }
+
   .input-container {
     padding: var(--space-3) var(--space-4);
     gap: var(--space-2);
   }
 
-  .input-action-btn:first-child {
+  .input-left-actions .input-action-btn:first-child {
     display: none;
   }
 
   .message-input {
     padding: var(--space-3);
     font-size: var(--text-body-sm);
+  }
+
+  .attachment-menu {
+    min-width: 180px;
+  }
+
+  .attachment-option {
+    padding: var(--space-2);
   }
 }
