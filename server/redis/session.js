@@ -4,50 +4,56 @@ const crypto = require('crypto');
 class SessionManager {
   constructor() {
     this.SESSION_PREFIX = 'session:';
-    this.SESSION_TIMEOUT = 86400; // 24 hours in seconds
+    this.SESSION_TIMEOUT = 604800; // 7 days in seconds
   }
 
-  // Create a new session
-  async createSession(username, userData = {}) {
+  // Create a new session using HASH
+  async createSession(userId, socketId, metadata = {}) {
     const client = getCacheClient();
     const sessionId = crypto.randomBytes(32).toString('hex');
     const sessionKey = `${this.SESSION_PREFIX}${sessionId}`;
 
-    const sessionData = JSON.stringify({
-      sessionId,
-      username,
-      ...userData,
-      createdAt: Date.now(),
-    });
+    const sessionData = {
+      userId: userId,
+      socketId: socketId,
+      connectedAt: Date.now().toString(),
+      userAgent: metadata.userAgent || 'unknown',
+      ip: metadata.ip || 'unknown'
+    };
 
-    await client.setEx(sessionKey, this.SESSION_TIMEOUT, sessionData);
+    // Store as HASH
+    await client.hSet(sessionKey, sessionData);
+    await client.expire(sessionKey, this.SESSION_TIMEOUT);
+    
     return sessionId;
   }
 
-  // Get session data
+  // Get session data from HASH
   async getSession(sessionId) {
     const client = getCacheClient();
     const sessionKey = `${this.SESSION_PREFIX}${sessionId}`;
-    const sessionData = await client.get(sessionKey);
-    return sessionData ? JSON.parse(sessionData) : null;
+    const sessionData = await client.hGetAll(sessionKey);
+    
+    if (!sessionData || Object.keys(sessionData).length === 0) {
+      return null;
+    }
+    
+    return sessionData;
   }
 
-  // Update session
+  // Update session fields
   async updateSession(sessionId, updates) {
     const client = getCacheClient();
     const sessionKey = `${this.SESSION_PREFIX}${sessionId}`;
-    const sessionData = await this.getSession(sessionId);
+    
+    const exists = await client.exists(sessionKey);
+    if (!exists) return null;
 
-    if (!sessionData) return null;
-
-    const updatedData = JSON.stringify({
-      ...sessionData,
-      ...updates,
-      updatedAt: Date.now(),
-    });
-
-    await client.setEx(sessionKey, this.SESSION_TIMEOUT, updatedData);
-    return JSON.parse(updatedData);
+    // Update specific fields
+    await client.hSet(sessionKey, updates);
+    await client.expire(sessionKey, this.SESSION_TIMEOUT);
+    
+    return await this.getSession(sessionId);
   }
 
   // Delete session
@@ -68,6 +74,22 @@ class SessionManager {
       return true;
     }
     return false;
+  }
+
+  // Get session by socket ID
+  async getSessionBySocketId(socketId) {
+    const client = getCacheClient();
+    const pattern = `${this.SESSION_PREFIX}*`;
+    const keys = await client.keys(pattern);
+    
+    for (const key of keys) {
+      const sessionData = await client.hGetAll(key);
+      if (sessionData.socketId === socketId) {
+        return { sessionId: key.replace(this.SESSION_PREFIX, ''), ...sessionData };
+      }
+    }
+    
+    return null;
   }
 }
 
