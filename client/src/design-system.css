@@ -104,6 +104,18 @@ html, body {
   color: var(--text-100);
 }
 
+/* Links */
+a {
+  color: var(--blue-from);
+  text-decoration: none;
+  transition: color 100ms ease-out;
+}
+
+a:hover {
+  color: var(--blue-to);
+  opacity: 0.8;
+}
+
 /* Typography Classes */
 .text-display {
   font-size: var(--text-display);

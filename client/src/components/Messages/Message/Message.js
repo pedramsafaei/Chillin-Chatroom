@@ -33,6 +33,17 @@ const Message = ({
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Determine animation class based on message state
+  const getAnimationClass = () => {
+    if (isSentByCurrentUser) {
+      if (state === MessageState.SENDING) return 'message-sending';
+      if (state === MessageState.SENT) return 'message-confirmed';
+    } else {
+      return 'message-incoming';
+    }
+    return '';
+  };
+
   // Format file size
   const formatFileSize = (bytes) => {
     if (!bytes) return '';
@@ -56,7 +67,7 @@ const Message = ({
         );
       case MessageState.SENT:
         return (
-          <span className="message-state sent" title="Sent">
+          <span className="message-state sent checkmark-icon" title="Sent">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
               <path d="M13.5 3L6 10.5L2.5 7" stroke="currentColor" strokeWidth="2" fill="none"/>
             </svg>
@@ -209,7 +220,7 @@ const Message = ({
     return (
       <div className="message-container-system">
         <div className="system-divider"></div>
-        <div className="message-system">
+        <div className="message-system message-incoming">
           <span className="system-emoji" role="img" aria-label="system icon">
             {getSystemEmoji(text)}
           </span>
@@ -245,10 +256,12 @@ const Message = ({
     );
   }
 
+  const animationClass = getAnimationClass();
+
   // User messages
   return isSentByCurrentUser ? (
     <div 
-      className={`message-container message-sent ${state === MessageState.FAILED ? 'message-failed' : ''}`}
+      className={`message-container message-sent ${animationClass} ${state === MessageState.FAILED ? 'message-failed' : ''}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
@@ -278,7 +291,7 @@ const Message = ({
     </div>
   ) : (
     <div 
-      className="message-container message-received"
+      className={`message-container message-received ${animationClass}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >

@@ -8,6 +8,8 @@ export const ConnectionState = {
   CONNECTED: 'CONNECTED',
   RECONNECTING: 'RECONNECTING',
   FAILED: 'FAILED',
+  OFFLINE: 'OFFLINE',
+  SYNCING: 'SYNCING',
 };
 
 // Exponential backoff configuration

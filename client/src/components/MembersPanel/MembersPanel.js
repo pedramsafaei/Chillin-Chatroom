@@ -30,9 +30,9 @@ const MembersPanel = ({ users, currentUser }) => {
         </div>
         <div className="members-list">
           {onlineUsers.map((user, index) => (
-            <div key={index} className="member-card">
+            <div key={index} className="member-card user-online">
               <div className="member-avatar">
-                <span className="status-dot">{getStatusDot(user.status || 'active')}</span>
+                <span className="status-dot status-dot-online">{getStatusDot(user.status || 'active')}</span>
                 <span className="avatar-text">{user.name.charAt(0).toUpperCase()}</span>
               </div>
               <div className="member-info">
@@ -54,9 +54,9 @@ const MembersPanel = ({ users, currentUser }) => {
           </div>
           <div className="members-list">
             {offlineUsers.map((user, index) => (
-              <div key={index} className="member-card offline">
+              <div key={index} className="member-card offline user-offline">
                 <div className="member-avatar">
-                  <span className="status-dot">⚫</span>
+                  <span className="status-dot status-dot-offline">⚫</span>
                   <span className="avatar-text">{user.name.charAt(0).toUpperCase()}</span>
                 </div>
                 <div className="member-info">
