@@ -234,18 +234,18 @@
   color: var(--text-400);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 100ms ease-out;
   flex-shrink: 0;
 }
 
 .input-action-btn:hover {
   background: var(--bg-700);
   color: var(--text-200);
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 .input-action-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.98);
 }
 
 /* Attachment Menu */
@@ -316,7 +316,7 @@
   color: var(--text-100);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: all 100ms ease-out;
   flex-shrink: 0;
   box-shadow: var(--shadow-sm);
   opacity: 0.5;
@@ -328,12 +328,12 @@
 }
 
 .send-button:hover:not(:disabled) {
-  transform: scale(1.05);
+  transform: scale(1.02);
   box-shadow: var(--shadow-md);
 }
 
 .send-button:active:not(:disabled) {
-  transform: scale(0.95);
+  transform: scale(0.98);
 }
 
 .send-button:disabled {

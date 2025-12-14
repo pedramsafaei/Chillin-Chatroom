@@ -240,7 +240,7 @@
   border: 1px solid var(--bg-700);
   border-radius: var(--radius-xl);
   overflow: hidden;
-  transition: all var(--transition-base);
+  transition: all 150ms ease-out;
   animation: staggerCardFadeIn 0.4s ease-out both;
   cursor: pointer;
 }
@@ -257,7 +257,7 @@
 }
 
 .room-card:hover {
-  transform: translateY(-4px) scale(1.02);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
   border-color: var(--bg-600);
 }
@@ -551,7 +551,7 @@
   border: none;
   cursor: pointer;
   font-family: var(--font-ui);
-  transition: all var(--transition-base);
+  transition: all 100ms ease-out;
 }
 
 .modal-button.primary {
@@ -561,8 +561,12 @@
 }
 
 .modal-button.primary:hover {
-  transform: translateY(-2px);
+  transform: scale(1.02);
   box-shadow: var(--shadow-lg);
+}
+
+.modal-button.primary:active {
+  transform: scale(0.98);
 }
 
 .modal-button.primary:disabled {

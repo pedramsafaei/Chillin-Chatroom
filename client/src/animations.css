@@ -1,0 +1,527 @@
+/* ============================================
+   ANIMATION SYSTEM
+   Complete animation specifications for messages,
+   presence indicators, and UI transitions
+   ============================================ */
+
+/* ============================================
+   MESSAGE ANIMATIONS
+   ============================================ */
+
+/* New Message (incoming) */
+.message-incoming {
+  animation: messageIncoming 200ms cubic-bezier(0.25, 0.1, 0.25, 1.0);
+}
+
+@keyframes messageIncoming {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Message Sent (optimistic) */
+.message-sending {
+  animation: messageSending 150ms ease-out;
+}
+
+@keyframes messageSending {
+  from {
+    opacity: 0.7;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Message confirmed - pulse checkmark */
+.message-confirmed .checkmark-icon {
+  animation: pulseCheckmark 400ms cubic-bezier(0.25, 0.1, 0.25, 1.0);
+}
+
+@keyframes pulseCheckmark {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Message Deleted */
+.message-deleting {
+  animation: messageDeleting 200ms cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes messageDeleting {
+  to {
+    opacity: 0;
+    height: 0;
+    margin-bottom: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* ============================================
+   PRESENCE ANIMATIONS
+   ============================================ */
+
+/* User Online */
+.user-online {
+  animation: userOnline 300ms ease-out;
+}
+
+@keyframes userOnline {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.user-online .status-dot {
+  animation: statusDotOnline 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes statusDotOnline {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* User Offline */
+.user-offline {
+  animation: userOffline 500ms ease-out 5s forwards;
+}
+
+@keyframes userOffline {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+}
+
+.user-offline .status-dot {
+  animation: statusDotOffline 500ms ease-out forwards;
+}
+
+@keyframes statusDotOffline {
+  from {
+    background-color: #22c55e;
+  }
+  to {
+    background-color: #71717a;
+  }
+}
+
+/* Typing Indicator - Three dots bouncing */
+.typing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.typing-indicator .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+  opacity: 0.6;
+  animation: typingBounce 600ms ease-in-out infinite;
+}
+
+.typing-indicator .dot:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.typing-indicator .dot:nth-child(2) {
+  animation-delay: 100ms;
+}
+
+.typing-indicator .dot:nth-child(3) {
+  animation-delay: 200ms;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  30% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   UI TRANSITIONS
+   ============================================ */
+
+/* Modal Open */
+.modal-backdrop {
+  animation: modalBackdropFadeIn 150ms ease-out;
+}
+
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+
+.modal-content {
+  animation: modalContentOpen 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalContentOpen {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Modal Close */
+.modal-closing .modal-backdrop {
+  animation: modalBackdropFadeOut 150ms ease-in forwards;
+}
+
+@keyframes modalBackdropFadeOut {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.modal-closing .modal-content {
+  animation: modalContentClose 150ms ease-in forwards;
+}
+
+@keyframes modalContentClose {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Page Transitions */
+.page-exit {
+  animation: pageExit 150ms ease-out forwards;
+}
+
+@keyframes pageExit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+}
+
+.page-enter {
+  animation: pageEnter 200ms ease-out;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ============================================
+   HOVER EFFECTS
+   ============================================ */
+
+/* Button Hover - Scale up */
+button.hover-scale,
+.button-hover-scale {
+  transition: transform 100ms ease-out, box-shadow 100ms ease-out;
+}
+
+button.hover-scale:hover,
+.button-hover-scale:hover {
+  transform: scale(1.02);
+}
+
+button.hover-scale:active,
+.button-hover-scale:active {
+  transform: scale(0.98);
+}
+
+/* Card Hover - Lift effect */
+.card-hover,
+.card.hover-lift {
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+.card-hover:hover,
+.card.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+}
+
+/* Link Hover - Color transition */
+a.link-hover,
+.link-hover {
+  transition: color 100ms ease-out, opacity 100ms ease-out;
+}
+
+a.link-hover:hover,
+.link-hover:hover {
+  opacity: 0.8;
+}
+
+/* ============================================
+   LOADING & SPINNER ANIMATIONS
+   ============================================ */
+
+/* Spinner */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pulse Loading */
+.pulse-loading {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Skeleton Loading */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonLoading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonLoading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================
+   UTILITY ANIMATION CLASSES
+   ============================================ */
+
+/* Fade In */
+.fade-in {
+  animation: fadeIn 200ms ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fade Out */
+.fade-out {
+  animation: fadeOut 200ms ease-out forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Slide In from Left */
+.slide-in-left {
+  animation: slideInLeft 300ms ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide In from Right */
+.slide-in-right {
+  animation: slideInRight 300ms ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide In from Top */
+.slide-in-top {
+  animation: slideInTop 300ms ease-out;
+}
+
+@keyframes slideInTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide In from Bottom */
+.slide-in-bottom {
+  animation: slideInBottom 300ms ease-out;
+}
+
+@keyframes slideInBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scale In */
+.scale-in {
+  animation: scaleIn 200ms cubic-bezier(0.25, 0.1, 0.25, 1.0);
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Bounce In */
+.bounce-in {
+  animation: bounceIn 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Shake Animation */
+.shake {
+  animation: shake 400ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
