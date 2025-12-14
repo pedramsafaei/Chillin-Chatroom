@@ -42,6 +42,27 @@ class Reaction {
     );
     return result.rows[0] || null;
   }
+
+  static async getEmojiCount(messageId, emoji) {
+    const pool = getPool();
+    const result = await pool.query(
+      `SELECT COUNT(*) as count
+       FROM reactions
+       WHERE message_id = $1 AND emoji = $2`,
+      [messageId, emoji]
+    );
+    return parseInt(result.rows[0].count) || 0;
+  }
+
+  static async getUserReaction(messageId, username, emoji) {
+    const pool = getPool();
+    const result = await pool.query(
+      `SELECT id FROM reactions
+       WHERE message_id = $1 AND username = $2 AND emoji = $3`,
+      [messageId, username, emoji]
+    );
+    return result.rows[0] || null;
+  }
 }
 
 module.exports = Reaction;
