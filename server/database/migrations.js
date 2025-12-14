@@ -82,8 +82,8 @@ const runMigrations = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS messages (
         id SERIAL PRIMARY KEY,
-        room_id INTEGER NOT NULL,
-        user_id INTEGER NOT NULL,
+        room_id INTEGER,
+        user_id INTEGER,
         room_name VARCHAR(100) NOT NULL,
         username VARCHAR(50) NOT NULL,
         text TEXT NOT NULL,
@@ -97,8 +97,7 @@ const runMigrations = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (reply_to_id) REFERENCES messages(id) ON DELETE SET NULL,
-        FOREIGN KEY (room_name) REFERENCES rooms(name) ON DELETE CASCADE
+        FOREIGN KEY (reply_to_id) REFERENCES messages(id) ON DELETE SET NULL
       );
     `);
 

@@ -34,6 +34,13 @@ const messageValidator = require("./middleware/messageValidation");
 const PORT = process.env.PORT || 5000;
 const router = require("./router");
 
+// API Routes
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
+const roomRoutes = require('./routes/rooms');
+const messageRoutes = require('./routes/messages');
+const uploadRoutes = require('./routes/uploads');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -380,11 +387,21 @@ io.on("connection", (socket) => {
 
       const { sanitizedMessage } = validationResult;
 
+      // Get user and room from database for IDs
+      const user = await User.findByUsername(username);
+      const room = await Room.findByName(roomName);
+      
+      if (!user || !room) {
+        return callback("User or room not found in database.");
+      }
+
       // Save message to database
       const savedMessage = await Message.create({
         roomName: roomName,
         username: username,
-        text: sanitizedMessage
+        text: sanitizedMessage,
+        roomId: room.id,
+        userId: user.id
       });
 
       // Prepare message data with database ID
@@ -555,6 +572,13 @@ io.on("connection", (socket) => {
     }
   });
 });
+
+// Mount API v1 routes
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/rooms', roomRoutes);
+app.use('/api/v1/messages', messageRoutes);
+app.use('/api/v1/uploads', uploadRoutes);
 
 app.use(router);
 
