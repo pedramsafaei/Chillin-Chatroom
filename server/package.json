@@ -16,7 +16,7 @@
     "@aws-sdk/s3-request-presigner": "^3.645.0",
     "@socket.io/redis-adapter": "^8.3.0",
     "cors": "^2.8.5",
-    "express": "^4.17.1",
+    "express": "^4.22.1",
     "nodemon": "^2.0.3",
     "pg": "^8.12.0",
     "redis": "^4.7.0",
